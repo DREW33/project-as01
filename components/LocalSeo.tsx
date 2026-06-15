@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Do you build mobile apps and AI automation in Guwahati?",
-    a: "Yes. From our Guwahati base we build Android & iOS apps, AI chatbots, AI calling agents, CRM automation and custom ERP software for businesses across Assam and Northeast India — and we work with clients worldwide, fully remotely.",
+    a: "Yes. From our Guwahati base we build Android & iOS apps, AI chatbots, CRM & WhatsApp automation and custom ERP software for businesses across Assam and Northeast India — and we work with clients worldwide, fully remotely.",
   },
   {
     q: "How long does it take to build a website in Assam?",

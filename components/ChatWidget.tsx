@@ -151,7 +151,7 @@ function brain(input: string, ctx: ChatCtx): { text: string; saveLead?: { phone:
   // 4. Rotating fallbacks that qualify the lead
   const fallbacks = [
     "Interesting! Tell me a bit more — is this about a website, mobile app, AI automation, or custom software? I'll point you to the right examples and pricing 🎯",
-    "I want to get this right for you 🤔 Could you share what kind of business you run and what you're trying to build? Or type your number and our team will call to discuss it properly.",
+    "I want to get this right for you 🤔 Could you share what kind of business you run and what you're trying to build? Or type your number and our team will reach out to discuss it properly.",
     "Good question — that's one for our human experts! Type your 10-digit number and our team will reach out, or use the Get Free Consultation button. Meanwhile: pricing, portfolio and timelines — I know those cold 😎",
   ];
   const text = fallbacks[ctx.fallbacks % fallbacks.length];

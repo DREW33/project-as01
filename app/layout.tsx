@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "software company in Guwahati",
     "mobile app developer Northeast India",
     "best web developer Assam",
-    "AI calling agent India",
+    "AI automation India",
     "custom software Assam",
     "Project AS01",
   ],

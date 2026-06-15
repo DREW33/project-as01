@@ -184,7 +184,7 @@ export const projects: Project[] = [
     description:
       "Dark-mode CRM with a drag-and-drop deal pipeline, AI lead scoring, call logs, quota tracking and automated follow-up sequences.",
     caseStudy:
-      "A 40-rep sales team was tracking deals in WhatsApp and losing follow-ups daily. PulseCRM gave them a kanban pipeline, AI-scored leads (31% of new leads now come from our AI calling agent), and automatic follow-up sequences. Win rate climbed 6 points and the average deal cycle shrank by 3 days in the first quarter.",
+      "A 40-rep sales team was tracking deals in WhatsApp and losing follow-ups daily. PulseCRM gave them a kanban pipeline, AI-scored leads (31% of new leads now come from automated WhatsApp follow-ups), and automatic follow-up sequences. Win rate climbed 6 points and the average deal cycle shrank by 3 days in the first quarter.",
     tech: ["React", "Node.js", "WebSockets", "PostgreSQL", "Claude API"],
     accent: "from-violet-600 via-purple-500 to-blue-500",
     stats: [
@@ -417,7 +417,7 @@ export const pricing = [
     tag: "Enterprise & AI systems",
     features: [
       "Full product engineering",
-      "AI calling + automation suite",
+      "AI automation suite",
       "Mobile apps (iOS + Android)",
       "Dedicated project team",
       "SLA-backed support",
