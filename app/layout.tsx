@@ -24,7 +24,8 @@ export const metadata: Metadata = {
     template: "%s | Project AS01 — Web Development Assam",
   },
   description:
-    "Project AS01 is Assam's premium website & app development company based in Guwahati. Custom websites, mobile apps, AI automation, e-commerce, CRM and enterprise software for businesses across Assam and Northeast India. Get a free consultation today.",
+    "Premium website & app development company in Guwahati, Assam. Custom websites from ₹20,000, mobile apps, AI automation & e-commerce. Free consultation.",
+  alternates: { canonical: "/" },
   keywords: [
     "website development company in Assam",
     "web development Guwahati",
@@ -43,9 +44,9 @@ export const metadata: Metadata = {
     type: "website",
     url: siteUrl,
     siteName: "Project AS01",
-    title: "Project AS01 — We Build Websites, Apps & AI Solutions",
+    title: "Project AS01— Web & App Development Company in Assam",
     description:
-      "Custom websites, mobile apps, AI automation, prediction platforms, gaming systems & enterprise software.",
+      "Premium websites from ₹20,000 in 7 days. Mobile apps, AI automation, e-commerce & enterprise software. Guwahati, Assam.",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Project AS01" }],
   },
   twitter: {

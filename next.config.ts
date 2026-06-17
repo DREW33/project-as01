@@ -23,6 +23,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // SEO: collapse www -> non-www so Google sees one canonical URL
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.projectas01.online" }],
+        destination: "https://projectas01.online/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
