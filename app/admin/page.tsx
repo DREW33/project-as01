@@ -21,13 +21,6 @@ type Lead = {
   message?: string;
 };
 
-const callLogs = [
-  { lead: "Rohit Verma", duration: "4m 12s", outcome: "Consultation booked", sentiment: "Positive", time: "Today 11:42" },
-  { lead: "Anita Desai", duration: "2m 48s", outcome: "Requested pricing PDF", sentiment: "Interested", time: "Today 10:15" },
-  { lead: "Karan Malhotra", duration: "6m 03s", outcome: "Follow-up scheduled", sentiment: "Positive", time: "Yesterday 17:30" },
-  { lead: "Fatima Khan", duration: "1m 55s", outcome: "Wrong number", sentiment: "N/A", time: "Yesterday 14:05" },
-];
-
 const traffic = [42, 58, 51, 69, 75, 64, 88, 92, 81, 96, 89, 100];
 const months = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 
@@ -41,7 +34,7 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tab, setTab] = useState<
-    "leads" | "calls" | "analytics" | "studio" | "analyzer" | "prospects" | "customers" | "admins"
+    "leads" | "analytics" | "studio" | "analyzer" | "prospects" | "customers" | "admins"
   >("leads");
   const [studioTopic, setStudioTopic] = useState("");
   const [studioResult, setStudioResult] = useState("");
@@ -630,7 +623,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
   const stats = [
     { label: "Total Leads", value: leads.length || 0, icon: "🎯" },
     { label: "New Today", value: leads.filter((l) => new Date(l.receivedAt).toDateString() === new Date().toDateString()).length, icon: "✨" },
-    { label: "AI Calls Made", value: callLogs.length, icon: "🤖" },
+    { label: "Customers", value: customers.length, icon: "💼" },
     { label: "Est. Pipeline", value: "₹8.4L", icon: "💰" },
   ];
 
@@ -696,7 +689,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
           {(
             [
               ["leads", "🎯 Leads & CRM"],
-              ["calls", "🤖 AI Call Logs"],
               ["analytics", "📊 Analytics"],
               ["studio", "✨ AI Studio"],
               ["analyzer", "🔍 Client Analyzer"],
@@ -786,46 +778,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
           </div>
         )}
 
-        {tab === "calls" && (
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {callLogs.map((c, i) => (
-              <motion.div
-                key={c.lead}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="glass glow-card rounded-2xl p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-display font-bold text-white">{c.lead}</p>
-                  <span className="text-xs text-slate-500">{c.time}</span>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-xl bg-white/[0.04] p-3">
-                    <p className="text-xs text-slate-500">Duration</p>
-                    <p className="mt-1 text-sm font-semibold text-white">{c.duration}</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-3">
-                    <p className="text-xs text-slate-500">Sentiment</p>
-                    <p className="mt-1 text-sm font-semibold text-purple-300">{c.sentiment}</p>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.04] p-3">
-                    <p className="text-xs text-slate-500">Outcome</p>
-                    <p className="mt-1 text-sm font-semibold text-green-300">{c.outcome}</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <button className="btn-ghost flex-1 rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wider text-white">
-                    ▶ Play Recording
-                  </button>
-                  <button className="btn-ghost flex-1 rounded-lg py-2 text-[11px] font-semibold uppercase tracking-wider text-white">
-                    📄 Transcript
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
 
         {tab === "studio" && (
           <>
@@ -1682,7 +1634,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
               {[
                 ["Conversion rate", "7.4%", "82%"],
                 ["Avg. session", "4m 32s", "68%"],
-                ["AI call answer rate", "91%", "91%"],
+                ["WhatsApp reply rate", "88%", "88%"],
                 ["Revenue this quarter", "₹12.6L", "76%"],
               ].map(([label, value, width]) => (
                 <div key={label} className="glass rounded-2xl p-5">
