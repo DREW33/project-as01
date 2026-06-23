@@ -41,7 +41,7 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tab, setTab] = useState<
-    "leads" | "calls" | "analytics" | "studio" | "analyzer" | "prospects" | "admins"
+    "leads" | "calls" | "analytics" | "studio" | "analyzer" | "prospects" | "customers" | "admins"
   >("leads");
   const [studioTopic, setStudioTopic] = useState("");
   const [studioResult, setStudioResult] = useState("");
@@ -189,6 +189,112 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (authed && tab === "prospects") loadProspects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, tab]);
+
+  // ---- Customers (paying clients) ----
+  type Customer = {
+    id: string;
+    name: string;
+    business?: string;
+    phone: string;
+    email?: string;
+    plan: string;
+    amountPaid?: number;
+    startDate: string;
+    expiryDate: string;
+    accessCode: string;
+    notes?: string;
+    websiteUrl?: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  const emptyCustomer = {
+    name: "",
+    business: "",
+    phone: "",
+    email: "",
+    plan: "Lite (₹2,999/yr)",
+    amountPaid: 2999,
+    startDate: new Date().toISOString().slice(0, 10),
+    expiryDate: "",
+    websiteUrl: "",
+    notes: "",
+  };
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [newCustomer, setNewCustomer] = useState({ ...emptyCustomer });
+  const [custCopied, setCustCopied] = useState("");
+
+  const loadCustomers = async () => {
+    try {
+      const r = await fetch("/api/customers", { headers: adminHeaders() });
+      const d = await r.json();
+      setCustomers(d.customers ?? []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const saveCustomer = async (
+    payload: Record<string, unknown>
+  ): Promise<Customer | null> => {
+    try {
+      const r = await fetch("/api/customers", {
+        method: "POST",
+        headers: adminHeaders(),
+        body: JSON.stringify({ customer: payload }),
+      });
+      const d = await r.json();
+      if (d.customer) {
+        setCustomers((ls) => {
+          const rest = ls.filter((x) => x.id !== d.customer.id);
+          return [d.customer, ...rest];
+        });
+        return d.customer;
+      }
+      if (d.error) alert(d.error);
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const addCustomer = async () => {
+    if (!newCustomer.name.trim() || !newCustomer.phone.trim()) return;
+    const saved = await saveCustomer(newCustomer);
+    if (saved) {
+      setNewCustomer({ ...emptyCustomer });
+      alert(
+        `Customer added!\n\nShare these login details with ${saved.name}:\n\nPortal: ${location.origin}/portal\nPhone: ${saved.phone}\nCode: ${saved.accessCode}`
+      );
+    }
+  };
+
+  const deleteCustomer = async (id: string) => {
+    if (!confirm("Remove this customer permanently?")) return;
+    setCustomers((ls) => ls.filter((x) => x.id !== id));
+    try {
+      await fetch("/api/customers", {
+        method: "POST",
+        headers: adminHeaders(),
+        body: JSON.stringify({ action: "delete", id }),
+      });
+    } catch {
+      /* optimistic */
+    }
+  };
+
+  const customerStatus = (c: Customer): { label: string; cls: string } => {
+    const days = Math.ceil(
+      (new Date(c.expiryDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+    );
+    if (days <= 0) return { label: `Expired (${Math.abs(days)}d ago)`, cls: "bg-red-500/15 text-red-300" };
+    if (days <= 30) return { label: `${days}d left`, cls: "bg-amber-500/15 text-amber-300" };
+    return { label: `Active · ${days}d`, cls: "bg-green-500/15 text-green-300" };
+  };
+
+  useEffect(() => {
+    if (authed && tab === "customers") loadCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed, tab]);
 
@@ -540,6 +646,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
               ["studio", "✨ AI Studio"],
               ["analyzer", "🔍 Client Analyzer"],
               ["prospects", "📇 Prospects"],
+              ["customers", "💼 Customers"],
               ["admins", "👤 Admins"],
             ] as const
           ).map(([id, label]) => (
@@ -1084,6 +1191,188 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
                         rows={2}
                         className={`${inputCls} mt-3`}
                       />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "customers" && (
+          <div className="mt-6 space-y-6">
+            {/* summary */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display gradient-text text-2xl font-extrabold">
+                  {customers.length}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Total</p>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display text-2xl font-extrabold text-green-300">
+                  {customers.filter((c) => new Date(c.expiryDate).getTime() > Date.now()).length}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Active</p>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display text-2xl font-extrabold text-amber-300">
+                  {customers.filter((c) => {
+                    const d = (new Date(c.expiryDate).getTime() - Date.now()) / 86400000;
+                    return d > 0 && d <= 30;
+                  }).length}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Expiring 30d</p>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <p className="font-display text-2xl font-extrabold text-purple-300">
+                  ₹{customers.reduce((s, c) => s + (c.amountPaid || 0), 0).toLocaleString("en-IN")}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Revenue</p>
+              </div>
+            </div>
+
+            {/* add customer */}
+            <div className="glass rounded-2xl p-6">
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white">
+                ➕ Add New Customer
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                When someone buys a plan, add them here. They get an access code to log in at
+                /portal and see their plan + renewal date.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <input className={inputCls} placeholder="Customer name *" value={newCustomer.name} onChange={(e) => setNewCustomer((f) => ({ ...f, name: e.target.value }))} />
+                <input className={inputCls} placeholder="Business name" value={newCustomer.business} onChange={(e) => setNewCustomer((f) => ({ ...f, business: e.target.value }))} />
+                <input className={inputCls} placeholder="10-digit phone *" value={newCustomer.phone} onChange={(e) => setNewCustomer((f) => ({ ...f, phone: e.target.value }))} />
+                <input className={inputCls} type="email" placeholder="Email" value={newCustomer.email} onChange={(e) => setNewCustomer((f) => ({ ...f, email: e.target.value }))} />
+                <select className={inputCls} value={newCustomer.plan} onChange={(e) => setNewCustomer((f) => ({ ...f, plan: e.target.value, amountPaid: e.target.value.includes("2,999") ? 2999 : e.target.value.includes("20,000") ? 20000 : e.target.value.includes("50,000") ? 50000 : f.amountPaid }))}>
+                  <option className="bg-[#0a0420]">Lite (₹2,999/yr)</option>
+                  <option className="bg-[#0a0420]">Starter (₹20,000)</option>
+                  <option className="bg-[#0a0420]">Business (₹50,000)</option>
+                  <option className="bg-[#0a0420]">Premium (Custom)</option>
+                  <option className="bg-[#0a0420]">Custom</option>
+                </select>
+                <input className={inputCls} type="number" placeholder="Amount paid (₹)" value={newCustomer.amountPaid} onChange={(e) => setNewCustomer((f) => ({ ...f, amountPaid: Number(e.target.value) }))} />
+                <div>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">Start date</label>
+                  <input className={inputCls} type="date" value={newCustomer.startDate} onChange={(e) => setNewCustomer((f) => ({ ...f, startDate: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">Expiry (blank = +1 year)</label>
+                  <input className={inputCls} type="date" value={newCustomer.expiryDate} onChange={(e) => setNewCustomer((f) => ({ ...f, expiryDate: e.target.value }))} />
+                </div>
+                <input className={inputCls} placeholder="Their website URL" value={newCustomer.websiteUrl} onChange={(e) => setNewCustomer((f) => ({ ...f, websiteUrl: e.target.value }))} />
+              </div>
+              <textarea rows={2} className={`${inputCls} mt-3`} placeholder="Internal notes (only admin sees this)" value={newCustomer.notes} onChange={(e) => setNewCustomer((f) => ({ ...f, notes: e.target.value }))} />
+              <button
+                onClick={addCustomer}
+                disabled={!newCustomer.name.trim() || !newCustomer.phone.trim()}
+                className="btn-neon font-display mt-4 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+              >
+                Save Customer & Generate Access Code
+              </button>
+            </div>
+
+            {/* list */}
+            {customers.length === 0 ? (
+              <div className="glass rounded-2xl p-10 text-center">
+                <p className="text-3xl">💼</p>
+                <p className="mt-3 text-sm text-slate-400">
+                  No customers yet. Add one above — they&apos;ll get an access code to log in
+                  at /portal to view their plan and renewal date.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {customers.map((c) => {
+                  const s = customerStatus(c);
+                  return (
+                    <div key={c.id} className="glass rounded-2xl p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-display text-base font-bold text-white">
+                            {c.name}
+                            {c.business && <span className="ml-2 text-xs font-normal text-slate-500">· {c.business}</span>}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            📞 +91 {c.phone}
+                            {c.email && ` · ✉ ${c.email}`}
+                            {c.websiteUrl && (
+                              <>
+                                {" "}·{" "}
+                                <a href={c.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-white">
+                                  🌐 {c.websiteUrl.replace(/^https?:\/\//, "")}
+                                </a>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${s.cls}`}>
+                          {s.label}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-white/[0.03] p-3 text-xs sm:grid-cols-4">
+                        <div>
+                          <p className="text-slate-500">Plan</p>
+                          <p className="mt-1 font-semibold text-white">{c.plan}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Paid</p>
+                          <p className="mt-1 font-semibold text-white">₹{(c.amountPaid || 0).toLocaleString("en-IN")}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Started</p>
+                          <p className="mt-1 font-semibold text-white">{new Date(c.startDate).toLocaleDateString("en-IN")}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Expires</p>
+                          <p className="mt-1 font-semibold text-white">{new Date(c.expiryDate).toLocaleDateString("en-IN")}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const msg = `Portal: ${location.origin}/portal\nPhone: ${c.phone}\nCode: ${c.accessCode}`;
+                            navigator.clipboard.writeText(msg);
+                            setCustCopied(c.id);
+                            setTimeout(() => setCustCopied(""), 1500);
+                          }}
+                          className="btn-ghost rounded-lg px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white"
+                        >
+                          {custCopied === c.id ? "✓ Copied" : `🔑 Copy login (code: ${c.accessCode})`}
+                        </button>
+                        <a
+                          href={`https://wa.me/91${c.phone}?text=${encodeURIComponent(
+                            `Hi ${c.name}, here are your Project AS01 customer portal details:\n\nPortal: ${typeof window !== "undefined" ? window.location.origin : ""}/portal\nPhone: ${c.phone}\nAccess code: ${c.accessCode}\n\nYou can check your plan and renewal date anytime here.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-ghost rounded-lg px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white"
+                        >
+                          💬 Send via WhatsApp
+                        </a>
+                        <button
+                          onClick={() => {
+                            const newExpiry = prompt("New expiry date (YYYY-MM-DD):", c.expiryDate);
+                            if (newExpiry) saveCustomer({ ...c, expiryDate: newExpiry });
+                          }}
+                          className="btn-ghost rounded-lg px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white"
+                        >
+                          📅 Edit expiry
+                        </button>
+                        <button
+                          onClick={() => deleteCustomer(c.id)}
+                          className="ml-auto rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-300 transition hover:bg-red-500/25"
+                        >
+                          🗑 Remove
+                        </button>
+                      </div>
+                      {c.notes && (
+                        <p className="mt-3 rounded-lg bg-white/[0.02] px-3 py-2 text-xs leading-relaxed text-slate-400">
+                          📝 {c.notes}
+                        </p>
+                      )}
                     </div>
                   );
                 })}

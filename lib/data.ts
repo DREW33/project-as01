@@ -381,6 +381,23 @@ export const services = [
 
 export const pricing = [
   {
+    name: "Lite",
+    price: "₹2,999/yr",
+    tag: "Smart starter — pay yearly",
+    features: [
+      "3-page premium website",
+      "Mobile responsive design",
+      "WhatsApp + contact form",
+      "Free hosting & domain SSL",
+      "Delivery in 3 days",
+      "1 free design revision",
+      "Renews yearly at ₹2,999",
+    ],
+    cta: "Get the Lite Plan",
+    featured: false,
+    highlight: "🔥 High demand",
+  },
+  {
     name: "Starter",
     price: "₹20,000+",
     tag: "Perfect for getting online",

@@ -26,23 +26,28 @@ export default function Pricing() {
           </p>
         </motion.div>
 
-        <div className="mt-14 grid gap-7 md:grid-cols-3">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {pricing.map((plan, i) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.6, delay: i * 0.14 }}
-              className={`relative rounded-3xl p-8 ${
+              transition={{ duration: 0.6, delay: i * 0.12 }}
+              className={`relative rounded-3xl p-7 ${
                 plan.featured
-                  ? "neon-border z-10 shadow-[0_0_60px_rgba(147,51,234,0.3)] md:-my-4 md:py-12"
+                  ? "neon-border z-10 shadow-[0_0_60px_rgba(147,51,234,0.3)] lg:-my-4 lg:py-10"
                   : "glass glow-card"
               }`}
             >
               {plan.featured && (
                 <span className="btn-neon font-display absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white">
                   ⚡ Most Popular
+                </span>
+              )}
+              {plan.highlight && !plan.featured && (
+                <span className="font-display absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-orange-400/50 bg-gradient-to-r from-orange-500 to-rose-500 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-[0_0_18px_rgba(251,146,60,0.5)]">
+                  {plan.highlight}
                 </span>
               )}
               <h3 className="font-display text-lg font-bold uppercase tracking-wider text-white">{plan.name}</h3>
