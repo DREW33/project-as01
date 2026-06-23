@@ -193,6 +193,26 @@ export default function AdminPage() {
   }, [authed, tab]);
 
   // ---- Customers (paying clients) ----
+  type SiteConfig = {
+    businessName?: string;
+    tagline?: string;
+    about?: string;
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+    address?: string;
+    hours?: string;
+    mapsUrl?: string;
+    instagram?: string;
+    facebook?: string;
+    primaryColor?: string;
+    accentColor?: string;
+    heroImage?: string;
+    logoImage?: string;
+    services?: { name: string; price?: string; description?: string }[];
+    gallery?: string[];
+    testimonials?: { name: string; text: string }[];
+  };
   type Customer = {
     id: string;
     name: string;
@@ -206,6 +226,9 @@ export default function AdminPage() {
     accessCode: string;
     notes?: string;
     websiteUrl?: string;
+    siteSlug?: string;
+    siteActive?: boolean;
+    siteConfig?: SiteConfig;
     createdAt: string;
     updatedAt: string;
   };
@@ -291,6 +314,38 @@ export default function AdminPage() {
     if (days <= 0) return { label: `Expired (${Math.abs(days)}d ago)`, cls: "bg-red-500/15 text-red-300" };
     if (days <= 30) return { label: `${days}d left`, cls: "bg-amber-500/15 text-amber-300" };
     return { label: `Active · ${days}d`, cls: "bg-green-500/15 text-green-300" };
+  };
+
+  const [expandedSite, setExpandedSite] = useState<string>("");
+  const slugify = (s: string) =>
+    String(s || "").toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+
+  const parseServices = (text: string) =>
+    text.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+      const [name, price, ...rest] = l.split("|").map((x) => x.trim());
+      return { name, price: price || "", description: rest.join(" | ") };
+    });
+  const stringifyServices = (arr?: { name: string; price?: string; description?: string }[]) =>
+    (arr || []).map((s) => [s.name, s.price || "", s.description || ""].filter(Boolean).join(" | ")).join("\n");
+
+  const parseLines = (text: string) =>
+    text.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  const parseTestimonials = (text: string) =>
+    text.split(/\n\s*\n/).map((b) => {
+      const [name, ...rest] = b.split("\n").map((l) => l.trim()).filter(Boolean);
+      return { name: name || "Customer", text: rest.join(" ") };
+    }).filter((t) => t.text);
+  const stringifyTestimonials = (arr?: { name: string; text: string }[]) =>
+    (arr || []).map((t) => `${t.name}\n${t.text}`).join("\n\n");
+
+  const updateSiteField = (c: Customer, patch: Partial<Customer>) => {
+    setCustomers((ls) => ls.map((x) => (x.id === c.id ? { ...x, ...patch } : x)));
+  };
+
+  const saveSiteSetup = async (c: Customer) => {
+    await saveCustomer(c);
+    alert("Site saved!\n\nCustomer site: " + (c.siteSlug ? `${location.origin}/site/${c.siteSlug}` : "(no slug yet)"));
   };
 
   useEffect(() => {
@@ -1372,6 +1427,103 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
                         <p className="mt-3 rounded-lg bg-white/[0.02] px-3 py-2 text-xs leading-relaxed text-slate-400">
                           📝 {c.notes}
                         </p>
+                      )}
+
+                      {/* SITE SETUP — expandable */}
+                      <button
+                        onClick={() => setExpandedSite(expandedSite === c.id ? "" : c.id)}
+                        className="mt-4 flex w-full items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-purple-300 transition hover:bg-purple-500/10"
+                      >
+                        <span>🎨 Hosted Site Setup {c.siteSlug && `· /site/${c.siteSlug}`} {c.siteActive === false && "🔒"}</span>
+                        <span>{expandedSite === c.id ? "▲" : "▼"}</span>
+                      </button>
+                      {expandedSite === c.id && (
+                        <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                          {/* Slug + Lock */}
+                          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                            <div>
+                              <label className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+                                Site slug (the URL: projectas01.online/site/<b>slug</b>)
+                              </label>
+                              <input
+                                className={inputCls}
+                                placeholder="e.g. borah-sweets"
+                                value={c.siteSlug || ""}
+                                onChange={(e) => updateSiteField(c, { siteSlug: slugify(e.target.value) })}
+                              />
+                            </div>
+                            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-semibold text-white">
+                              <input
+                                type="checkbox"
+                                checked={c.siteActive !== false}
+                                onChange={(e) => updateSiteField(c, { siteActive: e.target.checked })}
+                                className="h-4 w-4 accent-purple-500"
+                              />
+                              {c.siteActive === false ? "🔒 LOCKED" : "✅ Active"}
+                            </label>
+                          </div>
+
+                          {/* Identity */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Business</p>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <input className={inputCls} placeholder="Business name (shown on site)" value={c.siteConfig?.businessName || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, businessName: e.target.value } })} />
+                            <input className={inputCls} placeholder="Tagline / one-liner" value={c.siteConfig?.tagline || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, tagline: e.target.value } })} />
+                          </div>
+                          <textarea rows={3} className={inputCls} placeholder="About / description (2-4 sentences)" value={c.siteConfig?.about || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, about: e.target.value } })} />
+
+                          {/* Contact */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Contact</p>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <input className={inputCls} placeholder="Display phone (default = customer phone)" value={c.siteConfig?.phone || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, phone: e.target.value } })} />
+                            <input className={inputCls} placeholder="WhatsApp number" value={c.siteConfig?.whatsapp || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, whatsapp: e.target.value } })} />
+                            <input className={inputCls} placeholder="Email" value={c.siteConfig?.email || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, email: e.target.value } })} />
+                            <input className={inputCls} placeholder="Hours (e.g. Mon–Sat 10am–9pm)" value={c.siteConfig?.hours || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, hours: e.target.value } })} />
+                          </div>
+                          <input className={inputCls} placeholder="Address" value={c.siteConfig?.address || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, address: e.target.value } })} />
+                          <input className={inputCls} placeholder="Google Maps embed URL (optional)" value={c.siteConfig?.mapsUrl || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, mapsUrl: e.target.value } })} />
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <input className={inputCls} placeholder="Instagram URL" value={c.siteConfig?.instagram || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, instagram: e.target.value } })} />
+                            <input className={inputCls} placeholder="Facebook URL" value={c.siteConfig?.facebook || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, facebook: e.target.value } })} />
+                          </div>
+
+                          {/* Branding */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Branding</p>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                              <input type="color" className="h-8 w-12 cursor-pointer rounded border-0 bg-transparent" value={c.siteConfig?.primaryColor || "#a855f7"} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, primaryColor: e.target.value } })} />
+                              <span className="text-xs text-slate-400">Primary color {c.siteConfig?.primaryColor || "#a855f7"}</span>
+                            </div>
+                            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                              <input type="color" className="h-8 w-12 cursor-pointer rounded border-0 bg-transparent" value={c.siteConfig?.accentColor || "#3b82f6"} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, accentColor: e.target.value } })} />
+                              <span className="text-xs text-slate-400">Accent color {c.siteConfig?.accentColor || "#3b82f6"}</span>
+                            </div>
+                          </div>
+                          <input className={inputCls} placeholder="Logo image URL" value={c.siteConfig?.logoImage || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, logoImage: e.target.value } })} />
+                          <input className={inputCls} placeholder="Hero background image URL" value={c.siteConfig?.heroImage || ""} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, heroImage: e.target.value } })} />
+
+                          {/* Services */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Services (one per line — format: Name | Price | Description)</p>
+                          <textarea rows={5} className={`${inputCls} font-mono`} placeholder="Haircut | ₹250 | Premium cut + wash&#10;Bridal Makeup | ₹15,000 | Full HD bridal package" value={stringifyServices(c.siteConfig?.services)} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, services: parseServices(e.target.value) } })} />
+
+                          {/* Gallery */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Gallery (one image URL per line)</p>
+                          <textarea rows={4} className={`${inputCls} font-mono`} placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg" value={(c.siteConfig?.gallery || []).join("\n")} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, gallery: parseLines(e.target.value) } })} />
+
+                          {/* Testimonials */}
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Testimonials (Name on line 1, review on line 2 — blank line between each)</p>
+                          <textarea rows={5} className={`${inputCls} font-mono`} placeholder={"Rahul\nGreat service, fast delivery!\n\nPriya\nLoved the experience."} value={stringifyTestimonials(c.siteConfig?.testimonials)} onChange={(e) => updateSiteField(c, { siteConfig: { ...c.siteConfig, testimonials: parseTestimonials(e.target.value) } })} />
+
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            <button onClick={() => saveSiteSetup(c)} className="btn-neon font-display rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white">
+                              💾 Save Site
+                            </button>
+                            {c.siteSlug && (
+                              <a href={`/site/${c.siteSlug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost font-display rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white">
+                                🌐 Preview live site
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   );

@@ -61,14 +61,23 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => openModal(`${plan.name} Plan — ${plan.cta}`)}
-                className={`font-display mt-8 w-full rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white ${
-                  plan.featured ? "btn-neon" : "btn-ghost"
-                }`}
-              >
-                {plan.cta}
-              </button>
+              {plan.name === "Lite" ? (
+                <a
+                  href="/lite"
+                  className="btn-neon font-display mt-8 block w-full rounded-xl px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-white"
+                >
+                  {plan.cta} →
+                </a>
+              ) : (
+                <button
+                  onClick={() => openModal(`${plan.name} Plan — ${plan.cta}`)}
+                  className={`font-display mt-8 w-full rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white ${
+                    plan.featured ? "btn-neon" : "btn-ghost"
+                  }`}
+                >
+                  {plan.cta}
+                </button>
+              )}
             </motion.div>
           ))}
         </div>

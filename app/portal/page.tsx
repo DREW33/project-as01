@@ -11,6 +11,8 @@ type Account = {
   startDate: string;
   expiryDate: string;
   websiteUrl?: string;
+  siteSlug?: string;
+  siteActive?: boolean;
   daysLeft: number;
   expired: boolean;
   expiringSoon: boolean;
@@ -194,20 +196,74 @@ export default function PortalPage() {
                 rel="noopener noreferrer"
                 className="btn-neon font-display mt-5 block w-full rounded-xl px-6 py-3.5 text-center text-sm font-bold uppercase tracking-wider text-white"
               >
-                💬 {acc.expired || acc.expiringSoon ? "Renew via WhatsApp" : "Contact Support"}
+                💬 {acc.expired ? "Renew Now" : acc.expiringSoon ? "Renew via WhatsApp" : "Contact Support"}
               </a>
 
-              {acc.websiteUrl && (
+              {!acc.expired && !acc.expiringSoon && (
                 <a
-                  href={acc.websiteUrl}
+                  href={`https://wa.me/919670621213?text=${encodeURIComponent(renewMsg)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-ghost font-display mt-3 block w-full rounded-xl px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider text-white"
                 >
-                  🌐 Visit my website
+                  🔄 Renew early
                 </a>
               )}
             </div>
+
+            {/* Hosted website card (Lite plan customers) */}
+            {acc.siteSlug && (
+              <div className="glass rounded-3xl p-6">
+                <p className="font-display text-xs uppercase tracking-[0.25em] text-slate-400">
+                  🌐 Your Live Website
+                </p>
+                <p className="mt-2 font-mono text-sm text-white">
+                  projectas01.online/site/{acc.siteSlug}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <a
+                    href={`/site/${acc.siteSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-neon font-display rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white"
+                  >
+                    🚀 Visit my website
+                  </a>
+                  <a
+                    href={`https://wa.me/919670621213?text=${encodeURIComponent(
+                      `Hi Project AS01! I want to update my website (${acc.business || acc.name}). Here's what to change:`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-ghost font-display rounded-xl px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white"
+                  >
+                    ✏️ Request edits
+                  </a>
+                </div>
+                {acc.siteActive === false && (
+                  <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                    ⚠️ Your site is currently paused by admin. Contact us to reactivate.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* External website (non-Lite plans) */}
+            {!acc.siteSlug && acc.websiteUrl && (
+              <a
+                href={acc.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass block rounded-3xl p-6 text-center transition hover:border-purple-500/40"
+              >
+                <p className="font-display text-xs uppercase tracking-[0.25em] text-slate-400">
+                  🌐 Your Website
+                </p>
+                <p className="font-display gradient-text mt-2 text-lg font-bold">
+                  Visit my website →
+                </p>
+              </a>
+            )}
 
             <button
               onClick={() => {

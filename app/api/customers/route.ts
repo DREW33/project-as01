@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJson, writeJson, deleteJson } from "@/lib/blob";
 import { isValidAdminKey } from "@/lib/adminAuth";
-import { allCustomers, customerKey, normalizePhone, type Customer } from "@/lib/customers";
+import { allCustomers, customerKey, normalizePhone, slugify, type Customer, type SiteConfig } from "@/lib/customers";
 
 /*
  * Paying-customer registry (admin-only). One blob per customer so rapid edits
@@ -51,6 +51,13 @@ export async function POST(req: Request) {
     existing?.accessCode ||
     Math.random().toString(36).slice(2, 7).toUpperCase();
 
+  // Site slug: cleaned; ensure unique (if it collides with another customer, append id suffix)
+  let siteSlug = slugify(c.siteSlug || existing?.siteSlug || "");
+  if (siteSlug) {
+    const others = (await allCustomers()).filter((x) => x.id !== id && x.siteSlug === siteSlug);
+    if (others.length) siteSlug = `${siteSlug}-${id.slice(0, 4)}`;
+  }
+
   const record: Customer = {
     id,
     name: String(c.name).trim(),
@@ -64,6 +71,9 @@ export async function POST(req: Request) {
     accessCode,
     notes: c.notes ?? existing?.notes ?? "",
     websiteUrl: c.websiteUrl || existing?.websiteUrl || "",
+    siteSlug,
+    siteActive: c.siteActive !== undefined ? !!c.siteActive : existing?.siteActive !== false,
+    siteConfig: (c.siteConfig as SiteConfig) || existing?.siteConfig || {},
     createdAt: existing?.createdAt || now,
     updatedAt: now,
   };
