@@ -13,6 +13,7 @@ type Account = {
   websiteUrl?: string;
   siteSlug?: string;
   siteActive?: boolean;
+  customDomain?: string;
   daysLeft: number;
   expired: boolean;
   expiringSoon: boolean;
@@ -217,12 +218,26 @@ export default function PortalPage() {
                 <p className="font-display text-xs uppercase tracking-[0.25em] text-slate-400">
                   🌐 Your Live Website
                 </p>
-                <p className="mt-2 font-mono text-sm text-white">
-                  projectas01.online/site/{acc.siteSlug}
-                </p>
+                {acc.customDomain ? (
+                  <>
+                    <p className="mt-2 font-mono text-sm text-white">
+                      https://{acc.customDomain}{" "}
+                      <span className="ml-1 rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-300">
+                        ⭐ Your domain
+                      </span>
+                    </p>
+                    <p className="mt-1 font-mono text-[11px] text-slate-500">
+                      also at projectas01.online/site/{acc.siteSlug}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 font-mono text-sm text-white">
+                    projectas01.online/site/{acc.siteSlug}
+                  </p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <a
-                    href={`/site/${acc.siteSlug}`}
+                    href={acc.customDomain ? `https://${acc.customDomain}` : `/site/${acc.siteSlug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-neon font-display rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white"
@@ -240,6 +255,28 @@ export default function PortalPage() {
                     ✏️ Request edits
                   </a>
                 </div>
+                {!acc.customDomain && (
+                  <div className="mt-4 rounded-xl border border-purple-500/25 bg-purple-500/5 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                      💡 Want your own domain?
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+                      Use a brand-new URL like <span className="font-mono">yourbusiness.in</span>{" "}
+                      instead of our slug. Buy a domain (~₹800/yr) and we&apos;ll connect it for
+                      a one-time ₹500 setup.
+                    </p>
+                    <a
+                      href={`https://wa.me/919670621213?text=${encodeURIComponent(
+                        `Hi Project AS01! I want to connect my own domain to my Lite plan website (${acc.business || acc.name}).`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-ghost mt-3 inline-block rounded-lg px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white"
+                    >
+                      💬 Set up my domain
+                    </a>
+                  </div>
+                )}
                 {acc.siteActive === false && (
                   <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                     ⚠️ Your site is currently paused by admin. Contact us to reactivate.

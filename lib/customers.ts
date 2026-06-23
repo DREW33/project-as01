@@ -39,6 +39,7 @@ export type Customer = {
   siteSlug?: string;          // their URL slug, e.g. "borah-sweets"
   siteActive?: boolean;       // admin lock; default true
   siteConfig?: SiteConfig;    // customer's customization
+  customDomain?: string;      // optional custom domain (e.g. "borahsweets.in")
   createdAt: string;
   updatedAt: string;
 };
@@ -71,4 +72,11 @@ export async function findBySlug(slug: string): Promise<Customer | null> {
   if (!cleaned) return null;
   const all = await allCustomers();
   return all.find((c) => c.siteSlug === cleaned) || null;
+}
+
+export async function findByHost(host: string): Promise<Customer | null> {
+  const h = String(host || "").toLowerCase().replace(/^www\./, "").split(":")[0];
+  if (!h) return null;
+  const all = await allCustomers();
+  return all.find((c) => c.customDomain && c.customDomain === h) || null;
 }

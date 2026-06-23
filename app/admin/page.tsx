@@ -222,6 +222,7 @@ export default function AdminPage() {
     siteSlug?: string;
     siteActive?: boolean;
     siteConfig?: SiteConfig;
+    customDomain?: string;
     createdAt: string;
     updatedAt: string;
   };
@@ -1413,6 +1414,41 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#030014;color:#e8edf5}
                               />
                               {c.siteActive === false ? "🔒 LOCKED" : "✅ Active"}
                             </label>
+                          </div>
+
+                          {/* Custom domain */}
+                          <div>
+                            <label className="mb-1 block text-[10px] uppercase tracking-wider text-slate-500">
+                              Custom domain (optional — customer&apos;s own e.g. <b>borahsweets.in</b>)
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              <input
+                                className={`${inputCls} flex-1`}
+                                placeholder="e.g. borahsweets.in (leave blank if none)"
+                                value={c.customDomain || ""}
+                                onChange={(e) => updateSiteField(c, { customDomain: e.target.value })}
+                              />
+                              {c.customDomain && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const dns = `Hi ${c.name}! To connect ${c.customDomain} to your website, please add these DNS records at your domain registrar (Hostinger / GoDaddy / etc.):\n\n=== DNS RECORDS ===\nType: A\nName: @\nValue: 76.76.21.21\nTTL: 3600\n\nType: CNAME\nName: www\nValue: cname.vercel-dns.com\nTTL: 3600\n\nOnce you've added these, message us and we'll activate your domain (usually within 1 hour). DNS can take up to 24 hours to fully propagate worldwide.`;
+                                    navigator.clipboard.writeText(dns);
+                                    alert("DNS instructions copied! Paste to the customer on WhatsApp.\n\n" + dns);
+                                  }}
+                                  className="btn-ghost rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white"
+                                >
+                                  📋 Copy DNS instructions
+                                </button>
+                              )}
+                            </div>
+                            {c.customDomain && (
+                              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] leading-relaxed text-amber-300">
+                                ⚠️ One-time setup: add <span className="font-mono">{c.customDomain}</span> in
+                                Vercel project &rarr; Settings &rarr; Domains. Customer&apos;s DNS must
+                                point to Vercel (A 76.76.21.21 + CNAME cname.vercel-dns.com).
+                              </p>
+                            )}
                           </div>
 
                           {/* Identity */}

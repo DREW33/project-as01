@@ -58,6 +58,15 @@ export async function POST(req: Request) {
     if (others.length) siteSlug = `${siteSlug}-${id.slice(0, 4)}`;
   }
 
+  // Custom domain: normalize (strip protocol, www, paths, trailing slash, lowercase)
+  const customDomain = String(c.customDomain || existing?.customDomain || "")
+    .toLowerCase()
+    .trim()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/.*$/, "")
+    .replace(/[^a-z0-9.\-]/g, "");
+
   const record: Customer = {
     id,
     name: String(c.name).trim(),
@@ -74,6 +83,7 @@ export async function POST(req: Request) {
     siteSlug,
     siteActive: c.siteActive !== undefined ? !!c.siteActive : existing?.siteActive !== false,
     siteConfig: (c.siteConfig as SiteConfig) || existing?.siteConfig || {},
+    customDomain,
     createdAt: existing?.createdAt || now,
     updatedAt: now,
   };
